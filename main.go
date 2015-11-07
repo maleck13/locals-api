@@ -1,34 +1,34 @@
 package main
+
 import (
-	"net/http"
-	"github.com/gorilla/mux"
-	"github.com/maleck13/locals-api/routes"
 	"database/sql"
+	"github.com/maleck13/locals-api/Godeps/_workspace/src/github.com/gorilla/mux"
 	"github.com/maleck13/locals-api/data"
+	"github.com/maleck13/locals-api/routes"
+	"net/http"
 )
 
-
-func main(){
+func main() {
 	//set up db
-	var db *sql.DB;
-	db = data.DataBaseConnection();
-	defer db.Close();
-
+	var db *sql.DB
+	db = data.DataBaseConnection()
+	defer db.Close()
 
 	//setup routes
-	router :=SetUpRoutes();
+	router := SetUpRoutes()
 	http.Handle("/", router)
-	http.ListenAndServe(":9005",nil)
+	http.ListenAndServe(":9005", nil)
 }
 
-
-func SetUpRoutes()*mux.Router{
+func SetUpRoutes() *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/health",routes.CorsWrapper(routes.Ping)).Methods("GET","OPTIONS")
-	router.HandleFunc("/profile",routes.CorsWrapper(routes.CreateProfile)).Methods("POST","OPTIONS")
-	router.HandleFunc("/profiles/{county}",routes.CorsWrapper(routes.ListProfiles)).Methods("GET","OPTIONS")
-	router.HandleFunc("/profile/{id}",routes.CorsWrapper(routes.GetProfile)).Methods("GET","OPTIONS")
-	router.HandleFunc("/profile/{id}",routes.CorsWrapper(routes.UpdateProfile)).Methods("PUT","OPTIONS")
-	router.HandleFunc("/profile/{id}",routes.CorsWrapper(routes.DeleteProfile)).Methods("DELETE","OPTIONS")
+	router.HandleFunc("/health", routes.CorsWrapper(routes.Ping)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/version", routes.CorsWrapper(routes.Version)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/profile", routes.CorsWrapper(routes.CreateProfile)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/profiles/{county}", routes.CorsWrapper(routes.ListProfiles)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/profile/{id}", routes.CorsWrapper(routes.GetProfile)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/profile/{id}", routes.CorsWrapper(routes.UpdateProfile)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/profile/{id}", routes.CorsWrapper(routes.DeleteProfile)).Methods("DELETE", "OPTIONS")
+	router.HandleFunc("/profile/{id}/profilepic", routes.CorsWrapper(routes.UploadProfilePic)).Methods("POST", "OPTIONS")
 	return router
 }

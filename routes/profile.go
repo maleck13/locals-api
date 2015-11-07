@@ -1,107 +1,192 @@
 package routes
+
 import (
-	"net/http"
-	"github.com/gorilla/mux"
-	"log"
-	"github.com/maleck13/locals-api/data"
-	"strconv"
+
 	"encoding/json"
 	"errors"
+	"github.com/gorilla/mux"
+	"github.com/maleck13/locals-api/data"
+	"github.com/maleck13/locals-api/service"
+	"log"
+	"net/http"
+	"strconv"
+	"mime/multipart"
 )
 
-func Authenticate(wr http.ResponseWriter, req *http.Request)(error){
+
+func Authenticate(wr http.ResponseWriter, req *http.Request) error {
 	auth := req.URL.Query().Get("auth")
-	if "ssV09fGpX" != auth{
-		return errors.New("auth failed");
+	if "ssV09fGpX" != auth {
+		return errors.New("auth failed")
 	}
-	return nil;
+	return nil
 }
 
-func CreateProfile(wr http.ResponseWriter, req *http.Request){
-	var(
-		decoder * json.Decoder
-		profile * data.Profile
-		err error
+func CreateProfile(wr http.ResponseWriter, req *http.Request) {
+	var (
+		decoder *json.Decoder
+		profile *data.Profile
+		err     error
 		encoder *json.Encoder
 	)
 
 	decoder = json.NewDecoder(req.Body)
-	profile = data.NewProfile();
-	encoder = json.NewEncoder(wr);
+	profile = data.NewProfile()
+	encoder = json.NewEncoder(wr)
 
-	err = decoder.Decode(profile)
+	if err = decoder.Decode(profile); err !=nil{
+		http.Error(wr,err.Error(),http.StatusBadRequest)
+		return
+	}
 
-	if nil != err{
-		wr.WriteHeader(400)
-		encoder.Encode(err)
-		return;
+	if profile.Exists(profile.Email) {
+		wr.WriteHeader(http.StatusConflict)
+		encoder.Encode(NewErrorJSONExists())
+		return
 	}
-	if profile.Exists(profile.Email){
-		wr.WriteHeader(409)
-		encoder.Encode(errors.New("user already exists"))
-		return;
+	if _, err = profile.Save(); err != nil{
+		wr.WriteHeader(http.StatusInternalServerError)
+		encoder.Encode(NewErrorJSONUnexpectedError())
+		return
 	}
-	_,err = profile.Save()
 
-	if nil != err{
-		wr.WriteHeader(500)
-		encoder.Encode(err)
-		return;
-	}
 	encoder.Encode(profile)
 	//get handle to email channel and send email to user
+	go service.SendMailTemplate(service.MAIL_TEMPLATE_INTEREST,service.NewMailSender(),service.MAIL_FROM,profile.Email)
 
 }
 
-func UpdateProfile(wr http.ResponseWriter, req *http.Request){
+func UpdateProfile(wr http.ResponseWriter, req *http.Request) {
+	var (
+		decoder *json.Decoder
+		profile *data.Profile
+		err     error
+		encoder *json.Encoder
+	)
+
+	decoder = json.NewDecoder(req.Body)
+	profile = data.NewProfile()
+	encoder = json.NewEncoder(wr)
+	if err = decoder.Decode(profile); nil != err{
+		wr.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(NewErrorJSONBadRequest())
+		return
+	}
+
+	if err = profile.Update(); err != nil{
+		wr.WriteHeader(http.StatusInternalServerError)
+		encoder.Encode(NewErrorJSONUnexpectedError())
+		return
+	}
+	encoder.Encode(profile)
+}
+
+func DeleteProfile(wr http.ResponseWriter, req *http.Request) {
 
 }
 
-func DeleteProfile(wr http.ResponseWriter, req *http.Request){
-
-}
-
-func ListProfiles(wr http.ResponseWriter, req *http.Request){
-	err:=Authenticate(wr,req);
-	if nil != err{
+func ListProfiles(wr http.ResponseWriter, req *http.Request) {
+	err := Authenticate(wr, req)
+	if nil != err {
 		wr.WriteHeader(401)
-		return;
+		return
 	}
 	profile := data.NewProfile()
-	params:= mux.Vars(req);
-	profiles,err := profile.FindByCounty(params["county"])
-	if nil !=err{
-		log.Print("error getting by id " + err.Error());
-		wr.WriteHeader(500);
-		return;
+	params := mux.Vars(req)
+	profiles, err := profile.FindByCounty(params["county"])
+	if nil != err {
+		log.Print("error getting list " + err.Error())
+		wr.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	log.Printf("encoding profiles %i", len(profiles))
-	enc :=json.NewEncoder(wr);
-	enc.Encode(profiles);
+	enc := json.NewEncoder(wr)
+	enc.Encode(profiles)
 }
 
-func GetProfile(wr http.ResponseWriter, req *http.Request){
-	err:=Authenticate(wr,req);
-	if nil != err{
-		wr.WriteHeader(401)
+func GetProfile(wr http.ResponseWriter, req *http.Request) {
+	if err := Authenticate(wr, req); nil != err{
+		wr.WriteHeader(http.StatusUnauthorized)
 		return;
 	}
+	enc := json.NewEncoder(wr)
 	profile := data.NewProfile()
-	params:= mux.Vars(req);
-	id,err:= strconv.ParseInt(params["id"],10,64);
-	p,err:=profile.FindById(id);
-	if ae, ok := err.(*data.NoResult); ok { // if it is a NoResult
-		if(404 == ae.Code()){
-			wr.WriteHeader(404);
-			return;
-		}
-
-	}
-	if nil !=err{
-		log.Print("error getting by id " + err.Error());
-		wr.WriteHeader(500);
+	params := mux.Vars(req)
+	id, err := strconv.ParseInt(params["id"], 10, 64)
+	p, err := profile.FindById(id)
+	if _, ok := err.(*data.NoResult); ok { // if it is a NoResult
+		wr.WriteHeader(http.StatusNotFound)
+		enc.Encode(NewErrorJSONNotFound())
 		return;
 	}
-	enc :=json.NewEncoder(wr);
-	enc.Encode(p);
+	if nil != err {
+		wr.WriteHeader(http.StatusInternalServerError)
+		log.Println("faild to get profile " + err.Error())
+		return
+	}
+
+	enc.Encode(p)
+}
+
+
+
+func UploadProfilePic(wr http.ResponseWriter, req *http.Request) {
+	var (
+		profileImgLoc string
+		id            int64
+		err           error
+		p             *data.Profile
+		file 		  multipart.File
+		header 		  * multipart.FileHeader
+		enc 		  * json.Encoder
+
+	)
+
+	enc = json.NewEncoder(wr)
+	params := mux.Vars(req)
+	id, err = strconv.ParseInt(params["id"], 10, 64)
+	p, err = data.FindProfileById(id)
+	req.ParseMultipartForm(10 << 20) //approx 10MB
+	file, header, err = req.FormFile("file")
+
+	handleUploadErr:= func(err error, status int){
+		if nil != err {
+			wr.WriteHeader(status)
+			enc.Encode(NewErrorJSON(err.Error(),status))
+		}
+	};
+
+
+
+	if err != nil {
+		log.Println("error upload pic " + err.Error())
+		handleUploadErr(err,http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+	uploadedFilePath, err := service.SaveUploadedFile(file, header.Filename)
+	if err != nil {
+		log.Println("failed to create thumbnail file  " + err.Error())
+		handleUploadErr(err,http.StatusInternalServerError)
+		return
+	}
+
+	uploadedFilePath, err = service.ThumbnailMultipart(file, header.Filename)
+	if err != nil {
+		log.Println("failed to create thumbnail file  " + err.Error())
+		handleUploadErr(err,http.StatusInternalServerError)
+		return
+	}
+
+	profileImgLoc, err = data.PutInBucket(uploadedFilePath, header.Filename)
+
+	if err != nil {
+		log.Println("failed up upload to s3 " + err.Error())
+		handleUploadErr(err,http.StatusInternalServerError)
+		return
+	}
+
+	p.UpdateProfilePic(profileImgLoc)
+	enc.Encode(p)
+
 }

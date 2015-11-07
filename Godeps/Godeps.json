@@ -1,0 +1,43 @@
+{
+	"ImportPath": "github.com/maleck13/locals-api",
+	"GoVersion": "go1.5.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/disintegration/imaging",
+			"Rev": "3ab6ec550f20d497d2755ed3c48a3e45ad6b7eb9"
+		},
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.2-119-g527bcd5",
+			"Rev": "527bcd55aab2e53314f1a150922560174b493034"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "215affda49addc4c8ef7e2534915df2c8c35c6cd"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "ba336c9cfb43552c90de6cb2ceedd3271c747558"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/goamz/aws",
+			"Rev": "caaaea8b30ee15616494ee68abd5d8ebbbef05cf"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/goamz/s3",
+			"Rev": "caaaea8b30ee15616494ee68abd5d8ebbbef05cf"
+		},
+		{
+			"ImportPath": "github.com/vaughan0/go-ini",
+			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
+		},
+		{
+			"ImportPath": "golang.org/x/image/bmp",
+			"Rev": "6b7a488d1e6eb020511d4e561561b6ec45178301"
+		},
+		{
+			"ImportPath": "golang.org/x/image/tiff",
+			"Rev": "6b7a488d1e6eb020511d4e561561b6ec45178301"
+		}
+	]
+}

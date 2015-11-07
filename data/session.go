@@ -41,6 +41,5 @@ func DataBaseConnection()(*sql.DB){
 	handleFatal(err);
 	err=db.Ping();
 	handleFatal(err);
-	log.Println("mysql connection ok")
 	return db;
 }
