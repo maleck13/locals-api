@@ -10,7 +10,8 @@ CREATE TABLE `profile` (
   `bio` varchar(1024) DEFAULT 'bio info',
   `interests` varchar(256) DEFAULT NULL,
   `phone` varchar(32) DEFAULT NULL,
+  `registerToken` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email_UNIQUE` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1$$
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1$$
 

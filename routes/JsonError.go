@@ -20,7 +20,7 @@ func NewErrorJSONBadRequest()(*ErrorJSON){
 	return &ErrorJSON{Message: "could not parse request data ",Code:http.StatusBadRequest}
 }
 
-func NewErrorJSONUnexpectedError()(*ErrorJSON){
+func NewErrorJSONUnexpectedError(message string)(*ErrorJSON){
 	return NewErrorJSON("unexpected error occured ",http.StatusInternalServerError)
 }
 

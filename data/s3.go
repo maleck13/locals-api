@@ -1,8 +1,8 @@
 package data
 
 import (
-	"github.com/mitchellh/goamz/aws"
-	"github.com/mitchellh/goamz/s3"
+	"github.com/maleck13/locals-api/Godeps/_workspace/src/github.com/mitchellh/goamz/aws"
+	"github.com/maleck13/locals-api/Godeps/_workspace/src/github.com/mitchellh/goamz/s3"
 	"io/ioutil"
 	"log"
 	"os"
@@ -42,5 +42,5 @@ func PutInBucket(file string, remoteName string) (string, error) {
 	if nil != err {
 		return "", err
 	}
-	return _AWS_LOCATION + "/" +remoteName, nil
+	return _AWS_LOCATION + "/" + remoteName, nil
 }

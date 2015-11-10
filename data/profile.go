@@ -36,7 +36,7 @@ func FindProfileById( id int64) (* Profile,error){
 	p := NewProfile()
 	session = p.Store()
 	row:= session.QueryRow(sql_SELECT_BY_ID,id);
-	return single(row);
+	return singleProfile(row);
 }
 
 
@@ -54,15 +54,15 @@ func (nf * NoResult)Error()string{
 }
 
 
-const _fields = "id, email, UNIX_TIMESTAMP(created),county, type, profilePic, bio, interests, phone, registerToken";
-const sql_TABLE_INSERT = "INSERT INTO profile(email,county,type,registerToken) VALUES(?,?,?,?)";
-const sql_SELECT_BY_ID = "SELECT "+_fields+" FROM profile WHERE id=?";
-const sql_SELECT_BY_EMAIL = "SELECT "+_fields+" FROM profile WHERE email=?";
-const sql_SELECT_BY_COUNTY = "SELECT "+_fields+" FROM profile WHERE county=?";
+const _profile_fields = "id, email, UNIX_TIMESTAMP(created),county, type, profilePic, bio, interests, phone, registerToken";
+const sql_PROFILE_TABLE_INSERT = "INSERT INTO profile(email,county,type,registerToken) VALUES(?,?,?,?)";
+const sql_SELECT_BY_ID = "SELECT "+ _profile_fields +" FROM profile WHERE id=?";
+const sql_SELECT_BY_EMAIL = "SELECT "+ _profile_fields +" FROM profile WHERE email=?";
+const sql_SELECT_BY_COUNTY = "SELECT "+ _profile_fields +" FROM profile WHERE county=?";
 const sql_PROFILE_EXISTS  = "SELECT COUNT(email) as count FROM profile WHERE email=?";
 const sql_UPDATE_PROFILE_PIC = "UPDATE profile set profilePic=? WHERE id=?";
 const sql_UPDATE_PROFILE = "UPDATE profile SET email=?,county=?,type=?,bio=?,interests=?, phone=? WHERE id=?"
-const sql_SELECT_BY_REGISTER_TOKEN = "SELECT " + _fields + " FROM profile WHERE registerToken=?"
+const sql_SELECT_BY_REGISTER_TOKEN = "SELECT " + _profile_fields + " FROM profile WHERE registerToken=?"
 
 
 func (p * Profile) getRegisterToken()(string , error){
@@ -90,7 +90,7 @@ func (p *Profile) findByRegisterToken(registerToken string)(*Profile,error){
 	)
 	session= p.Store();
 	row:= session.QueryRow(sql_SELECT_BY_REGISTER_TOKEN,registerToken);
-	return single(row)
+	return singleProfile(row)
 }
 
 func (p *Profile) Save()(*Profile,error){
@@ -102,7 +102,7 @@ func (p *Profile) Save()(*Profile,error){
 	session= p.Store();
 
 
-	stmt,err = session.Prepare(sql_TABLE_INSERT)
+	stmt,err = session.Prepare(sql_PROFILE_TABLE_INSERT)
 	if nil != err {
 		return p,err;
 	}
@@ -121,10 +121,10 @@ func (p *Profile) FindById(id int64) (* Profile, error){
 	var(
 		session * sql.DB
 	)
-	log.Printf("finding profile in db with id %i", id)
+	log.Printf("finding profile in db with id %d", id)
 	session = p.Store()
 	row:= session.QueryRow(sql_SELECT_BY_ID,id);
-	return single(row);
+	return singleProfile(row);
 }
 
 func (p *Profile) Exists(email string)bool{
@@ -147,7 +147,7 @@ func (p * Profile) FindByEmail(email string)(* Profile,error){
 	session = p.Store()
 	row := session.QueryRow(sql_SELECT_BY_EMAIL,email);
 
-	return single(row);
+	return singleProfile(row);
 }
 
 func (p * Profile) FindByCounty(county string) ([]*Profile,error){
@@ -162,7 +162,7 @@ func (p * Profile) FindByCounty(county string) ([]*Profile,error){
 	if nil != err{
 		return nil,err
 	}
-	profiles,err = list(rows);
+	profiles,err = listProfile(rows);
 	if nil != err{
 		return nil,err
 	}
@@ -205,7 +205,7 @@ func (p*Profile) Update()(error){
 	return error
 }
 
-func single(row * sql.Row)(*Profile,error){
+func singleProfile(row * sql.Row)(*Profile,error){
 	var profile * Profile;
 	var err error
 	profile = NewProfile()
@@ -213,7 +213,7 @@ func single(row * sql.Row)(*Profile,error){
 	var pInterests []byte;
 	var pPhone []byte;
 
-	err = row.Scan(&profile.Id,&profile.Email,&profile.Created, &profile.County, &profile.Type, &pProfile,&profile.Bio,&pInterests,&pPhone);
+	err = row.Scan(&profile.Id,&profile.Email,&profile.Created, &profile.County, &profile.Type, &pProfile,&profile.Bio,&pInterests,&pPhone, &profile.RegisterToken);
 	if 0 == profile.Id && nil != err{
 		return profile,&NoResult{Err:err.Error()}
 	}
@@ -226,15 +226,18 @@ func single(row * sql.Row)(*Profile,error){
 	return profile,nil;
 }
 
-func list(rows *sql.Rows)([]*Profile,error){
+func listProfile(rows *sql.Rows)([]*Profile,error){
 	profiles := make([]*Profile,0);
 	for rows.Next(){
 		p := NewProfile()
 		var pPic []byte;
-		err := rows.Scan(&p.Id,&p.Email,&p.Created,&p.County,&p.Type,&pPic)
+		var pInterests []byte;
+		var pPhone []byte;
+		err := rows.Scan(&p.Id,&p.Email,&p.Created,&p.County,&p.Type,&pPic,&p.Bio,&pInterests,&pPhone,&p.RegisterToken)
 
 		p.ProfilePic = string(pPic);
-
+		p.Interests = string(pInterests)
+		p.Phone = string(pPhone)
 		if err != nil {
 			return nil,err;
 		}

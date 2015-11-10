@@ -1,7 +1,14 @@
 {
 	"ImportPath": "github.com/maleck13/locals-api",
 	"GoVersion": "go1.5.1",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
+		{
+			"ImportPath": "github.com/davecgh/go-spew/spew",
+			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
+		},
 		{
 			"ImportPath": "github.com/disintegration/imaging",
 			"Rev": "3ab6ec550f20d497d2755ed3c48a3e45ad6b7eb9"
@@ -28,6 +35,15 @@
 			"Rev": "caaaea8b30ee15616494ee68abd5d8ebbbef05cf"
 		},
 		{
+			"ImportPath": "github.com/pmezard/go-difflib/difflib",
+			"Rev": "d8ed2627bdf02c080bf22230dbb337003b7aba2d"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.0-79-ge7a1d88",
+			"Rev": "e7a1d8890c7638d7bb50e3e498de4a1e913a28cf"
+		},
+		{
 			"ImportPath": "github.com/vaughan0/go-ini",
 			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
 		},
@@ -38,6 +54,11 @@
 		{
 			"ImportPath": "golang.org/x/image/tiff",
 			"Rev": "6b7a488d1e6eb020511d4e561561b6ec45178301"
+		},
+		{
+			"ImportPath": "gopkg.in/DATA-DOG/go-sqlmock.v1",
+			"Comment": "v1.0.0",
+			"Rev": "febff80c09712044459f72847e56aaa69c9dad3b"
 		}
 	]
 }
