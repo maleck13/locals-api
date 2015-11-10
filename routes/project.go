@@ -39,32 +39,32 @@ func CreateProject(wr http.ResponseWriter, req *http.Request) {
 	encoder.Encode(proj)
 }
 
-func ListProjects(wr http.ResponseWriter, req *http.Request)  {
+func ListProjects(wr http.ResponseWriter, req *http.Request) {
 
-	var(
-		from int
-		to int
-		err error
-		encoder *json.Encoder
-		proj *data.Project
+	var (
+		from     int
+		to       int
+		err      error
+		encoder  *json.Encoder
+		proj     *data.Project
 		listProj []*data.Project
 	)
 	proj = data.NewProject()
 	encoder = json.NewEncoder(wr)
 	f := req.URL.Query().Get("from")
 	t := req.URL.Query().Get("to")
-	if from,err = strconv.Atoi(f); err != nil{
+	if from, err = strconv.Atoi(f); err != nil {
 		log.Println(err.Error())
 		wr.WriteHeader(http.StatusBadRequest)
 		encoder.Encode(NewErrorJSONBadRequest())
-		return;
+		return
 	}
-	if to,err = strconv.Atoi(t); err != nil{
+	if to, err = strconv.Atoi(t); err != nil {
 		wr.WriteHeader(http.StatusBadRequest)
 		encoder.Encode(NewErrorJSONBadRequest())
-		return;
+		return
 	}
-	listProj,err = proj.ListProjects(from,to)
+	listProj, err = proj.ListProjects(from, to)
 	encoder.Encode(listProj)
 }
 

@@ -26,17 +26,17 @@ func SetUpRoutes() *mux.Router {
 	router.HandleFunc("/version", routes.CorsWrapper(routes.Version)).Methods("GET", "OPTIONS")
 
 	router.HandleFunc("/profile", routes.CorsWrapper(routes.CreateProfile)).Methods("POST", "OPTIONS")
-	router.HandleFunc("/profiles/{county}", routes.CorsWrapper(routes.ListProfiles)).Methods("GET","OPTIONS")
+	router.HandleFunc("/profiles/{county}", routes.CorsWrapper(routes.ListProfiles)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/profile/{id}", routes.CorsWrapper(routes.GetProfile)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/profile/{id}", routes.CorsWrapper(routes.UpdateProfile)).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/profile/{id}", routes.CorsWrapper(routes.DeleteProfile)).Methods("DELETE", "OPTIONS")
 	router.HandleFunc("/profile/{id}/profilepic", routes.CorsWrapper(routes.UploadProfilePic)).Methods("POST", "OPTIONS")
 
-	projectRouter:=router.PathPrefix("/project").Subrouter()
-	projectRouter.HandleFunc("/project",routes.CorsWrapper(routes.CreateProject)).Methods("POST","OPTIONS")
-	projectRouter.HandleFunc("/{id}",routes.CorsWrapper(routes.GetProject)).Methods("GET","OPTIONS")
+	projectRouter := router.PathPrefix("/project").Subrouter()
+	projectRouter.HandleFunc("/project", routes.CorsWrapper(routes.CreateProject)).Methods("POST", "OPTIONS")
+	projectRouter.HandleFunc("/{id}", routes.CorsWrapper(routes.GetProject)).Methods("GET", "OPTIONS")
 
-	router.Handle("/projects",routes.CorsWrapper(routes.ListProjects)).Methods("GET","OPTIONS")
+	router.Handle("/projects", routes.CorsWrapper(routes.ListProjects)).Methods("GET", "OPTIONS")
 
 	return router
 }

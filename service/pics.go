@@ -3,8 +3,8 @@ package service
 import (
 	"github.com/maleck13/locals-api/Godeps/_workspace/src/github.com/disintegration/imaging"
 	"image"
-	"image/jpeg"
 	_ "image/gif"
+	"image/jpeg"
 	_ "image/png"
 	"io"
 	"log"

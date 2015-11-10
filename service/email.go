@@ -1,12 +1,13 @@
 package service
+
 import (
+	"bytes"
+	"crypto/tls"
+	"errors"
 	"log"
 	"net/smtp"
-	"errors"
 	"os"
-	"crypto/tls"
-	"bytes"
-"text/template"
+	"text/template"
 )
 
 type SmtpTemplateData struct {
@@ -14,10 +15,10 @@ type SmtpTemplateData struct {
 	To      string
 	Subject string
 	Body    string
-	Sender 	string
+	Sender  string
 }
 
-const( 
+const (
 	MAIL_TEMPLATE = `From: {{.From}}
 To: {{.To}}
 Subject: {{.Subject}}
@@ -29,34 +30,33 @@ Sincerely,
 {{.Sender}}
 `
 
-	MAIL_FROM = "info@locals.ie"
-	MAIL_HOST = "server3.mywebdesign.ie"
-	MAIL_PORT = "25"
+	MAIL_FROM              = "info@locals.ie"
+	MAIL_HOST              = "server3.mywebdesign.ie"
+	MAIL_PORT              = "25"
 	MAIL_TEMPLATE_INTEREST = "Thanks for your interest in Locals.ie. \n\r We will be adding features overtime and will let you know about them as they become ready to use. \n\r"
 )
 
 type MailSender interface {
-	Send(from,to,content string)error
+	Send(from, to, content string) error
 }
-
 
 type DefaultSender struct {
 }
 
-func (DefaultSender) Send(from,to,content string)error{
-	var(
-		err error
-		c *smtp.Client
+func (DefaultSender) Send(from, to, content string) error {
+	var (
+		err  error
+		c    *smtp.Client
 		auth smtp.Auth
 	)
 	log.Println("mail: sending mail to " + to)
-	auth,err = DefaultSender{}.auth()
+	auth, err = DefaultSender{}.auth()
 	if nil != err {
-		return err;
+		return err
 	}
 	c, err = smtp.Dial(MAIL_HOST + ":" + MAIL_PORT)
 	if nil != err {
-		return err;
+		return err
 	}
 	defer c.Close()
 
@@ -66,7 +66,7 @@ func (DefaultSender) Send(from,to,content string)error{
 	}
 	if err = c.StartTLS(tlc); err != nil {
 		log.Println("tls error " + err.Error())
-		return err;
+		return err
 	}
 	c.Auth(auth)
 	c.Mail(from)
@@ -86,39 +86,38 @@ func (DefaultSender) Send(from,to,content string)error{
 		log.Println("email: failed to write " + err.Error())
 		return err
 	}
-	return err;
+	return err
 }
 
-func (DefaultSender) auth()(smtp.Auth,error){
+func (DefaultSender) auth() (smtp.Auth, error) {
 	var user string = os.Getenv("MAIL_USER")
 	var pass string = os.Getenv("MAIL_PASS")
-	var auth smtp.Auth;
+	var auth smtp.Auth
 
-	if "" == user || "" == pass{
-		return nil,errors.New("missing user or pass ensure env MAIL_USER and MAIL_PASS set")
+	if "" == user || "" == pass {
+		return nil, errors.New("missing user or pass ensure env MAIL_USER and MAIL_PASS set")
 	}
-	auth =smtp.PlainAuth("",user,pass,MAIL_HOST)
-	return auth,nil
+	auth = smtp.PlainAuth("", user, pass, MAIL_HOST)
+	return auth, nil
 }
 
-func NewMailSender()(MailSender){
+func NewMailSender() MailSender {
 	return DefaultSender{}
 }
 
+func parseTemplate(t, from, to, subject, sender string) (string, error) {
 
-func parseTemplate(t ,from,to,subject,sender string)(string,error){
-
-	var(
+	var (
 		err error
 		doc bytes.Buffer
 	)
 
 	context := &SmtpTemplateData{
-		From : from,
-		To : to,
+		From:    from,
+		To:      to,
 		Subject: subject,
-		Body:t,
-		Sender:"Craig",
+		Body:    t,
+		Sender:  "Craig",
 	}
 	parsed := template.New("emailTemplate")
 
@@ -127,25 +126,22 @@ func parseTemplate(t ,from,to,subject,sender string)(string,error){
 		log.Print("error trying to parse mail template")
 	}
 	err = parsed.Execute(&doc, context)
-	return string(doc.Bytes()),err
+	return string(doc.Bytes()), err
 }
 
-
-func SendMailTemplate(template string ,sender MailSender, from,to string)(error){
-	var(
-		err error
+func SendMailTemplate(template string, sender MailSender, from, to string) error {
+	var (
+		err     error
 		content string
 	)
 
-	if MAIL_TEMPLATE_INTEREST == template{
-		content,err = parseTemplate(MAIL_TEMPLATE_INTEREST,from,to,"Thanks for your interest in locals.ie","Craig")
-	}else{
+	if MAIL_TEMPLATE_INTEREST == template {
+		content, err = parseTemplate(MAIL_TEMPLATE_INTEREST, from, to, "Thanks for your interest in locals.ie", "Craig")
+	} else {
 		err = errors.New("no such template")
 	}
 	if nil != err {
-		return err;
+		return err
 	}
-	return sender.Send(from,to,content)
+	return sender.Send(from, to, content)
 }
-
-
